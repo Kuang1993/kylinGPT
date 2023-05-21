@@ -4,7 +4,7 @@ KylinGPT💖是一个基于OpenAI的GPT模型的应用，它包括中英文学�
 
 ## Get Started✈
 
-在克隆(git clone)该仓库后，你可以使用以下命令安装所有的依赖：
+在克隆(git clone)本仓库后，你可以使用以下命令安装所有的依赖：
 ```
 pip install -r requirements.txt
 ```
