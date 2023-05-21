@@ -1,0 +1,7 @@
+streamlit
+openai
+requests
+json
+urllib
+pillow
+matplotlib
