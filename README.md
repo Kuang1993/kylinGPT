@@ -8,11 +8,11 @@ KylinGPT💖是一个基于OpenAI的GPT模型的应用，它包括中英文学�
 ```
 pip install -r requirements.txt
 ```
-你可以在cmd命令行使用以下命令来运行该应用：
+你可以在cmd命令行使用以下命令来运行该应用💻：
 ```
 streamlit run kylinGPT.py
 ```
-## 项目结构
+## 项目结构🥽
 ```
 - `kylinGPT.py`: 主应用程序文件
 - `README.md`: 项目说明和指南
