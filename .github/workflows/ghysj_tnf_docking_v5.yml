@@ -1,0 +1,55 @@
+name: GHYSJ TNF docking v5 ADFR fixed install
+
+on:
+  push:
+    branches:
+      - ghysj-tnf-docking-20260816
+    paths:
+      - 'docking/run_ghysj_tnf_docking_v5.py'
+      - '.github/workflows/ghysj_tnf_docking_v5.yml'
+  workflow_dispatch:
+
+jobs:
+  docking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ligand preparation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'rdkit>=2024.3' 'meeko==0.7.1' numpy scipy gemmi
+      - name: Install official AutoDock Vina 1.2.7
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L --retry 3 --fail 'https://github.com/ccsb-scripps/AutoDock-Vina/releases/download/v1.2.7/vina_1.2.7_linux_x86_64' -o "$HOME/bin/vina"
+          chmod +x "$HOME/bin/vina"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          "$HOME/bin/vina" --version
+      - name: Install Scripps ADFR Suite receptor preparation
+        run: |
+          curl -L --retry 3 --fail 'https://ccsb.scripps.edu/adfr/download/1038/' -o /tmp/adfrsuite.tar.gz
+          mkdir -p /tmp/adfr_unpack
+          tar xzf /tmp/adfrsuite.tar.gz -C /tmp/adfr_unpack
+          ADIR=$(find /tmp/adfr_unpack -maxdepth 1 -type d -name 'ADFRsuite*' | head -1)
+          echo "ADFR source: $ADIR"
+          cd "$ADIR"
+          echo 'Installer help:'
+          bash ./install.sh -h || true
+          bash ./install.sh -s "$HOME/ADFRsuite" -c 0
+          test -x "$HOME/ADFRsuite/bin/prepare_receptor"
+          "$HOME/ADFRsuite/bin/prepare_receptor" -h | head -30 || true
+          echo "$HOME/ADFRsuite/bin" >> "$GITHUB_PATH"
+      - name: Run docking v5
+        run: python docking/run_ghysj_tnf_docking_v5.py --out GHYSJ_TNF_Docking_Result
+      - name: Package result
+        run: python -c "import shutil; shutil.make_archive('GHYSJ_TNF_Docking_Result','zip','GHYSJ_TNF_Docking_Result')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GHYSJ_TNF_Docking_Result_v5
+          path: GHYSJ_TNF_Docking_Result.zip
+          if-no-files-found: error
+          retention-days: 30
