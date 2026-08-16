@@ -1,0 +1,56 @@
+name: GHYSJ TNF docking
+
+on:
+  push:
+    branches:
+      - ghysj-tnf-docking-20260816
+    paths:
+      - 'docking/**'
+      - '.github/workflows/ghysj_tnf_docking.yml'
+  workflow_dispatch:
+
+jobs:
+  docking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install docking preparation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'rdkit>=2024.3' 'meeko==0.7.1' numpy scipy gemmi
+
+      - name: Install official AutoDock Vina 1.2.7 binary
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L --retry 3 --fail \
+            'https://github.com/ccsb-scripps/AutoDock-Vina/releases/download/v1.2.7/vina_1.2.7_linux_x86_64' \
+            -o "$HOME/bin/vina"
+          chmod +x "$HOME/bin/vina"
+          "$HOME/bin/vina" --version
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Run GHYSJ-TNF docking
+        run: |
+          python docking/run_ghysj_tnf_docking.py --out GHYSJ_TNF_Docking_Result
+
+      - name: Package result
+        run: |
+          python - <<'PY'
+          import shutil
+          shutil.make_archive('GHYSJ_TNF_Docking_Result', 'zip', 'GHYSJ_TNF_Docking_Result')
+          PY
+
+      - name: Upload result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GHYSJ_TNF_Docking_Result
+          path: GHYSJ_TNF_Docking_Result.zip
+          if-no-files-found: error
+          retention-days: 30
